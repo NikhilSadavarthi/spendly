@@ -528,3 +528,63 @@ a { color: inherit; text-decoration: none; }
     .nav-links a:not(.nav-cta) { display: none; }
     .hero { padding: 3rem 1rem 2rem; }
 }
+
+/* ------------------------------------------------------------------ */
+/* Terms Page                                                         */
+/* ------------------------------------------------------------------ */
+
+.terms-section {
+    padding: 4rem 2rem;
+    display: flex;
+    justify-content: center;
+}
+
+.terms-container {
+    max-width: 700px;
+    width: 100%;
+    background: var(--paper-card);
+    padding: 3rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-soft);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+}
+
+.terms-title {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+}
+
+.terms-updated {
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border-soft);
+    padding-bottom: 1rem;
+}
+
+.terms-body h2 {
+    font-size: 1.25rem;
+    color: var(--ink-soft);
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    font-family: var(--font-body);
+    font-weight: 600;
+}
+
+.terms-body p {
+    font-size: 0.95rem;
+    color: var(--ink-muted);
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 600px) {
+    .terms-container {
+        padding: 2rem 1.5rem;
+    }
+    .terms-title {
+        font-size: 2rem;
+    }
+}
