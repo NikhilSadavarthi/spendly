@@ -1,6 +1,19 @@
 from flask import Flask, render_template
+import os
+from database.db import close_db, init_db, seed_db, DATABASE
 
 app = Flask(__name__)
+
+# Register database close teardown
+@app.teardown_appcontext
+def teardown_db(exception):
+    close_db(exception)
+
+# Initialize and seed database if it doesn't exist
+with app.app_context():
+    if not os.path.exists(DATABASE):
+        init_db()
+        seed_db()
 
 
 # ------------------------------------------------------------------ #
