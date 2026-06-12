@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g
 import os
+import datetime
+import calendar
 from database.db import close_db, init_db, seed_db, DATABASE, get_db
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -130,23 +132,26 @@ def logout():
     return redirect(url_for("landing"))
 
 
-def get_profile_dashboard_data(db, user_id):
-    stats = db.execute(
-        "SELECT COUNT(*) as count, COALESCE(SUM(amount), 0.0) as total FROM expenses WHERE user_id = ?",
-        (user_id,)
-    ).fetchone()
+def get_profile_dashboard_data(db, user_id, start_date=None, end_date=None):
+    query_params = [user_id]
+    date_filter = ""
+    if start_date:
+        date_filter += " AND date >= ?"
+        query_params.append(start_date)
+    if end_date:
+        date_filter += " AND date <= ?"
+        query_params.append(end_date)
+
+    stats_query = f"SELECT COUNT(*) as count, COALESCE(SUM(amount), 0.0) as total FROM expenses WHERE user_id = ?{date_filter}"
+    stats = db.execute(stats_query, query_params).fetchone()
     total_expenses_count = stats["count"]
     total_amount_spent = stats["total"]
 
-    recent_transactions = db.execute(
-        "SELECT id, category, amount, date, description FROM expenses WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT 5",
-        (user_id,)
-    ).fetchall()
+    tx_query = f"SELECT id, category, amount, date, description FROM expenses WHERE user_id = ?{date_filter} ORDER BY date DESC, id DESC LIMIT 5"
+    recent_transactions = db.execute(tx_query, query_params).fetchall()
 
-    category_breakdown_rows = db.execute(
-        "SELECT category, SUM(amount) as amount_sum FROM expenses WHERE user_id = ? GROUP BY category ORDER BY amount_sum DESC",
-        (user_id,)
-    ).fetchall()
+    cat_query = f"SELECT category, SUM(amount) as amount_sum FROM expenses WHERE user_id = ?{date_filter} GROUP BY category ORDER BY amount_sum DESC"
+    category_breakdown_rows = db.execute(cat_query, query_params).fetchall()
 
     category_breakdown = []
     top_category = None
@@ -188,6 +193,11 @@ def profile():
             return render_template(
                 "profile.html",
                 error="Name and email are required.",
+                filter_type="all",
+                start_date="",
+                end_date="",
+                start_date_val=None,
+                end_date_val=None,
                 **data
             ), 400
 
@@ -196,6 +206,11 @@ def profile():
             return render_template(
                 "profile.html",
                 error="Invalid email address format.",
+                filter_type="all",
+                start_date="",
+                end_date="",
+                start_date_val=None,
+                end_date_val=None,
                 **data
             ), 400
 
@@ -206,6 +221,11 @@ def profile():
             return render_template(
                 "profile.html",
                 error="Email already registered.",
+                filter_type="all",
+                start_date="",
+                end_date="",
+                start_date_val=None,
+                end_date_val=None,
                 **data
             ), 400
 
@@ -222,12 +242,77 @@ def profile():
             return render_template(
                 "profile.html",
                 error="An error occurred. Please try again.",
+                filter_type="all",
+                start_date="",
+                end_date="",
+                start_date_val=None,
+                end_date_val=None,
                 **data
             ), 500
 
-    # GET request: fetch user statistics
-    data = get_profile_dashboard_data(db, g.user["id"])
-    return render_template("profile.html", **data)
+    # GET request: fetch user statistics with optional date filtering
+    filter_type = request.args.get("filter_type", "all").strip()
+    start_date = request.args.get("start_date", "").strip()
+    end_date = request.args.get("end_date", "").strip()
+
+    if filter_type not in ["all", "this_month", "last_30_days", "this_year", "custom"]:
+        filter_type = "all"
+
+    start_date_val = None
+    end_date_val = None
+    error = None
+
+    today = datetime.date.today()
+
+    if filter_type == "this_month":
+        start_date_val = today.replace(day=1).strftime("%Y-%m-%d")
+        last_day = calendar.monthrange(today.year, today.month)[1]
+        end_date_val = today.replace(day=last_day).strftime("%Y-%m-%d")
+    elif filter_type == "last_30_days":
+        start_date_val = (today - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+        end_date_val = today.strftime("%Y-%m-%d")
+    elif filter_type == "this_year":
+        start_date_val = today.replace(month=1, day=1).strftime("%Y-%m-%d")
+        end_date_val = today.replace(month=12, day=31).strftime("%Y-%m-%d")
+    elif filter_type == "custom":
+        if not start_date or not end_date:
+            error = "Both start date and end date are required for custom filter."
+        else:
+            try:
+                parsed_start = datetime.date.fromisoformat(start_date)
+                parsed_end = datetime.date.fromisoformat(end_date)
+                if parsed_start > parsed_end:
+                    error = "Start date cannot be after end date."
+                else:
+                    start_date_val = start_date
+                    end_date_val = end_date
+            except ValueError:
+                error = "Invalid date format. Please use YYYY-MM-DD."
+
+    if error:
+        # Fallback to no filter, return status 400
+        data = get_profile_dashboard_data(db, g.user["id"])
+        return render_template(
+            "profile.html",
+            error=error,
+            filter_type="all",
+            start_date="",
+            end_date="",
+            start_date_val=None,
+            end_date_val=None,
+            **data
+        ), 400
+
+    data = get_profile_dashboard_data(db, g.user["id"], start_date_val, end_date_val)
+    return render_template(
+        "profile.html",
+        filter_type=filter_type,
+        start_date=start_date,
+        end_date=end_date,
+        start_date_val=start_date_val,
+        end_date_val=end_date_val,
+        **data
+    )
 
 
 @app.route("/profile/password", methods=["POST"])
@@ -247,6 +332,11 @@ def profile_password():
         return render_template(
             "profile.html",
             error="All password fields are required.",
+            filter_type="all",
+            start_date="",
+            end_date="",
+            start_date_val=None,
+            end_date_val=None,
             **data
         ), 400
 
@@ -255,6 +345,11 @@ def profile_password():
         return render_template(
             "profile.html",
             error="Incorrect current password.",
+            filter_type="all",
+            start_date="",
+            end_date="",
+            start_date_val=None,
+            end_date_val=None,
             **data
         ), 400
 
@@ -263,6 +358,11 @@ def profile_password():
         return render_template(
             "profile.html",
             error="Password must be at least 8 characters long.",
+            filter_type="all",
+            start_date="",
+            end_date="",
+            start_date_val=None,
+            end_date_val=None,
             **data
         ), 400
 
@@ -271,6 +371,11 @@ def profile_password():
         return render_template(
             "profile.html",
             error="New passwords do not match.",
+            filter_type="all",
+            start_date="",
+            end_date="",
+            start_date_val=None,
+            end_date_val=None,
             **data
         ), 400
 
@@ -285,6 +390,11 @@ def profile_password():
         return render_template(
             "profile.html",
             error="An error occurred. Please try again.",
+            filter_type="all",
+            start_date="",
+            end_date="",
+            start_date_val=None,
+            end_date_val=None,
             **data
         ), 500
 
