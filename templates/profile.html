@@ -3,6 +3,11 @@
 {% block title %}Profile — Spendly{% endblock %}
 
 {% block content %}
+{% set filter_type = filter_type|default('all') %}
+{% set start_date = start_date|default('') %}
+{% set end_date = end_date|default('') %}
+{% set start_date_val = start_date_val|default(None) %}
+{% set end_date_val = end_date_val|default(None) %}
 <div class="profile-container">
 
     <!-- Flash Messages & Errors -->
@@ -53,6 +58,50 @@
 
     <!-- Tab 1: Overview -->
     <div id="overview-tab" class="tab-content {{ 'hidden' if active_tab != 'overview' else '' }}">
+
+        <!-- Date Filter Section -->
+        <div class="date-filter-bar">
+            <form method="GET" action="{{ url_for('profile') }}" class="date-filter-form">
+                <div class="date-filter-group">
+                    <label for="date_filter_preset" class="date-filter-label">Filter Expenses:</label>
+                    <select name="filter_type" id="date_filter_preset" class="date-filter-select">
+                        <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All Time</option>
+                        <option value="this_month" {% if filter_type == 'this_month' %}selected{% endif %}>This Month</option>
+                        <option value="last_30_days" {% if filter_type == 'last_30_days' %}selected{% endif %}>Last 30 Days</option>
+                        <option value="this_year" {% if filter_type == 'this_year' %}selected{% endif %}>This Year</option>
+                        <option value="custom" {% if filter_type == 'custom' %}selected{% endif %}>Custom Range</option>
+                    </select>
+                </div>
+                
+                <div id="custom-date-inputs" class="date-filter-group hidden">
+                    <label for="start_date" class="date-filter-label">From:</label>
+                    <input type="date" id="start_date" name="start_date" class="date-filter-input" value="{{ start_date or '' }}">
+                    
+                    <label for="end_date" class="date-filter-label">To:</label>
+                    <input type="date" id="end_date" name="end_date" class="date-filter-input" value="{{ end_date or '' }}">
+                </div>
+                
+                <div class="date-filter-group" style="margin-left: auto;">
+                    <button type="submit" class="btn-filter-apply">
+                        <i data-lucide="filter" style="width: 14px; height: 14px; margin-right: 4px; vertical-align: text-bottom;"></i> Apply
+                    </button>
+                    {% if filter_type != 'all' %}
+                        <a href="{{ url_for('profile') }}" class="btn-filter-reset">
+                            <i data-lucide="refresh-cw" style="width: 14px; height: 14px; margin-right: 4px; vertical-align: text-bottom;"></i> Reset
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <!-- Active Filter Date Range Display -->
+        {% if start_date_val or end_date_val %}
+            <div class="active-filter-badge" style="margin-bottom: 1.5rem; font-size: 0.88rem; color: var(--accent); display: flex; align-items: center; gap: 0.5rem; font-weight: 500;">
+                <i data-lucide="calendar" style="width: 16px; height: 16px;"></i>
+                <span>Showing expenses from <strong>{{ start_date_val }}</strong> to <strong>{{ end_date_val }}</strong></span>
+            </div>
+        {% endif %}
+
         <!-- Stats Section -->
         <section class="stats-grid">
             <div class="stat-card">
@@ -207,6 +256,29 @@ document.addEventListener("DOMContentLoaded", function() {
             this.classList.add("active");
         });
     });
+
+    // Custom Date range toggling
+    const presetSelect = document.getElementById("date_filter_preset");
+    const customDateContainer = document.getElementById("custom-date-inputs");
+    const startDateInput = document.getElementById("start_date");
+    const endDateInput = document.getElementById("end_date");
+
+    function toggleCustomDates() {
+        if (presetSelect && presetSelect.value === "custom") {
+            customDateContainer.classList.remove("hidden");
+            startDateInput.required = true;
+            endDateInput.required = true;
+        } else if (customDateContainer) {
+            customDateContainer.classList.add("hidden");
+            startDateInput.required = false;
+            endDateInput.required = false;
+        }
+    }
+
+    if (presetSelect) {
+        presetSelect.addEventListener("change", toggleCustomDates);
+        toggleCustomDates(); // Set initial visibility
+    }
 });
 </script>
 {% endblock %}
