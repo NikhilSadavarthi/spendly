@@ -130,6 +130,47 @@ def logout():
     return redirect(url_for("landing"))
 
 
+def get_profile_dashboard_data(db, user_id):
+    stats = db.execute(
+        "SELECT COUNT(*) as count, COALESCE(SUM(amount), 0.0) as total FROM expenses WHERE user_id = ?",
+        (user_id,)
+    ).fetchone()
+    total_expenses_count = stats["count"]
+    total_amount_spent = stats["total"]
+
+    recent_transactions = db.execute(
+        "SELECT id, category, amount, date, description FROM expenses WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT 5",
+        (user_id,)
+    ).fetchall()
+
+    category_breakdown_rows = db.execute(
+        "SELECT category, SUM(amount) as amount_sum FROM expenses WHERE user_id = ? GROUP BY category ORDER BY amount_sum DESC",
+        (user_id,)
+    ).fetchall()
+
+    category_breakdown = []
+    top_category = None
+    if category_breakdown_rows:
+        top_category = category_breakdown_rows[0]["category"]
+        for row in category_breakdown_rows:
+            pct = 0.0
+            if total_amount_spent > 0:
+                pct = (row["amount_sum"] / total_amount_spent) * 100
+            category_breakdown.append({
+                "category": row["category"],
+                "amount_sum": row["amount_sum"],
+                "percentage": pct
+            })
+
+    return {
+        "total_expenses_count": total_expenses_count,
+        "total_amount_spent": total_amount_spent,
+        "recent_transactions": recent_transactions,
+        "category_breakdown": category_breakdown,
+        "top_category": top_category
+    }
+
+
 @app.route("/profile", methods=["GET", "POST"])
 def profile():
     if g.user is None:
@@ -142,38 +183,30 @@ def profile():
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip()
 
-        # Fetch stats to re-render in case of errors
-        stats = db.execute(
-            "SELECT COUNT(*) as count, COALESCE(SUM(amount), 0.0) as total FROM expenses WHERE user_id = ?",
-            (g.user["id"],)
-        ).fetchone()
-        total_expenses_count = stats["count"]
-        total_amount_spent = stats["total"]
-
         if not name or not email:
+            data = get_profile_dashboard_data(db, g.user["id"])
             return render_template(
                 "profile.html",
                 error="Name and email are required.",
-                total_expenses_count=total_expenses_count,
-                total_amount_spent=total_amount_spent
+                **data
             ), 400
 
         if "@" not in email or "." not in email.split("@")[-1]:
+            data = get_profile_dashboard_data(db, g.user["id"])
             return render_template(
                 "profile.html",
                 error="Invalid email address format.",
-                total_expenses_count=total_expenses_count,
-                total_amount_spent=total_amount_spent
+                **data
             ), 400
 
         # Check for duplicate email (excluding current user)
         cursor = db.execute("SELECT id FROM users WHERE email = ? AND id != ?", (email, g.user["id"]))
         if cursor.fetchone() is not None:
+            data = get_profile_dashboard_data(db, g.user["id"])
             return render_template(
                 "profile.html",
                 error="Email already registered.",
-                total_expenses_count=total_expenses_count,
-                total_amount_spent=total_amount_spent
+                **data
             ), 400
 
         # Update user info
@@ -185,26 +218,16 @@ def profile():
             return redirect(url_for("profile"))
         except Exception as e:
             db.rollback()
+            data = get_profile_dashboard_data(db, g.user["id"])
             return render_template(
                 "profile.html",
                 error="An error occurred. Please try again.",
-                total_expenses_count=total_expenses_count,
-                total_amount_spent=total_amount_spent
+                **data
             ), 500
 
     # GET request: fetch user statistics
-    stats = db.execute(
-        "SELECT COUNT(*) as count, COALESCE(SUM(amount), 0.0) as total FROM expenses WHERE user_id = ?",
-        (g.user["id"],)
-    ).fetchone()
-    total_expenses_count = stats["count"]
-    total_amount_spent = stats["total"]
-
-    return render_template(
-        "profile.html",
-        total_expenses_count=total_expenses_count,
-        total_amount_spent=total_amount_spent
-    )
+    data = get_profile_dashboard_data(db, g.user["id"])
+    return render_template("profile.html", **data)
 
 
 @app.route("/profile/password", methods=["POST"])
@@ -218,44 +241,37 @@ def profile_password():
     confirm_password = request.form.get("confirm_password", "")
 
     db = get_db()
-    # Fetch stats to re-render in case of errors
-    stats = db.execute(
-        "SELECT COUNT(*) as count, COALESCE(SUM(amount), 0.0) as total FROM expenses WHERE user_id = ?",
-        (g.user["id"],)
-    ).fetchone()
-    total_expenses_count = stats["count"]
-    total_amount_spent = stats["total"]
 
     if not current_password or not new_password or not confirm_password:
+        data = get_profile_dashboard_data(db, g.user["id"])
         return render_template(
             "profile.html",
             error="All password fields are required.",
-            total_expenses_count=total_expenses_count,
-            total_amount_spent=total_amount_spent
+            **data
         ), 400
 
     if not check_password_hash(g.user["password"], current_password):
+        data = get_profile_dashboard_data(db, g.user["id"])
         return render_template(
             "profile.html",
             error="Incorrect current password.",
-            total_expenses_count=total_expenses_count,
-            total_amount_spent=total_amount_spent
+            **data
         ), 400
 
     if len(new_password) < 8:
+        data = get_profile_dashboard_data(db, g.user["id"])
         return render_template(
             "profile.html",
             error="Password must be at least 8 characters long.",
-            total_expenses_count=total_expenses_count,
-            total_amount_spent=total_amount_spent
+            **data
         ), 400
 
     if new_password != confirm_password:
+        data = get_profile_dashboard_data(db, g.user["id"])
         return render_template(
             "profile.html",
             error="New passwords do not match.",
-            total_expenses_count=total_expenses_count,
-            total_amount_spent=total_amount_spent
+            **data
         ), 400
 
     # Hash and update
@@ -265,11 +281,11 @@ def profile_password():
         db.commit()
     except Exception as e:
         db.rollback()
+        data = get_profile_dashboard_data(db, g.user["id"])
         return render_template(
             "profile.html",
             error="An error occurred. Please try again.",
-            total_expenses_count=total_expenses_count,
-            total_amount_spent=total_amount_spent
+            **data
         ), 500
 
     # Clear session and redirect to login

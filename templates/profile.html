@@ -33,138 +33,180 @@
         <div class="profile-user-info">
             <h1>{{ g.user.name if g.user else 'Demo User' }}</h1>
             <p class="profile-email">{{ g.user.email if g.user else 'demo@spendly.com' }}</p>
-            <p class="profile-joined">Member since 15 Jan 2025</p>
+            <p class="profile-joined">Member since 12 Jun 2026</p>
         </div>
     </header>
 
-    <!-- Stats Section -->
-    <section class="stats-grid">
-        <div class="stat-card">
-            <span class="stat-label">TOTAL SPENT</span>
-            <p class="stat-value">₹12,450.75</p>
-        </div>
-        <div class="stat-card">
-            <span class="stat-label">TRANSACTIONS</span>
-            <p class="stat-value">8</p>
-        </div>
-        <div class="stat-card">
-            <span class="stat-label">TOP CATEGORY</span>
-            <p class="stat-value">Food</p>
-        </div>
-    </section>
+    {% set active_tab = 'settings' if error else 'overview' %}
 
-    <!-- Dashboard Content Grid -->
-    <div class="profile-content-grid">
-        <!-- Left: Recent Transactions -->
-        <div class="content-card">
-            <h2 class="content-card-title">Recent Transactions</h2>
-            <div style="overflow-x: auto;">
-                <table class="transactions-table">
-                    <thead>
-                        <tr>
-                            <th>DATE</th>
-                            <th>DESCRIPTION</th>
-                            <th>CATEGORY</th>
-                            <th>AMOUNT</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>12 Apr 2025</td>
-                            <td>Groceries</td>
-                            <td><span class="badge badge-food">Food</span></td>
-                            <td class="amount-cell">₹850.00</td>
-                        </tr>
-                        <tr>
-                            <td>11 Apr 2025</td>
-                            <td>Metro card recharge</td>
-                            <td><span class="badge badge-transport">Transport</span></td>
-                            <td class="amount-cell">₹500.00</td>
-                        </tr>
-                        <tr>
-                            <td>10 Apr 2025</td>
-                            <td>Electricity bill</td>
-                            <td><span class="badge badge-bills">Bills</span></td>
-                            <td class="amount-cell">₹2,200.00</td>
-                        </tr>
-                        <tr>
-                            <td>09 Apr 2025</td>
-                            <td>Doctor visit</td>
-                            <td><span class="badge badge-health">Health</span></td>
-                            <td class="amount-cell">₹800.00</td>
-                        </tr>
-                        <tr>
-                            <td>08 Apr 2025</td>
-                            <td>Netflix subscription</td>
-                            <td><span class="badge badge-entertainment">Entertainment</span></td>
-                            <td class="amount-cell">₹649.00</td>
-                        </tr>
-                    </tbody>
-                </table>
+    <!-- Profile Tabs -->
+    <div class="profile-tabs">
+        <button class="tab-btn {{ 'active' if active_tab == 'overview' else '' }}" data-tab="overview">
+            <i data-lucide="layout-dashboard" style="width: 16px; height: 16px; margin-right: 6px; vertical-align: text-bottom;"></i>
+            Overview
+        </button>
+        <button class="tab-btn {{ 'active' if active_tab == 'settings' else '' }}" data-tab="settings">
+            <i data-lucide="settings" style="width: 16px; height: 16px; margin-right: 6px; vertical-align: text-bottom;"></i>
+            Settings
+        </button>
+    </div>
+
+    <!-- Tab 1: Overview -->
+    <div id="overview-tab" class="tab-content {{ 'hidden' if active_tab != 'overview' else '' }}">
+        <!-- Stats Section -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-label">TOTAL SPENT</span>
+                <p class="stat-value">₹{{ "{:,.2f}".format(total_amount_spent) }}</p>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">TRANSACTIONS</span>
+                <p class="stat-value">{{ total_expenses_count }}</p>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">TOP CATEGORY</span>
+                <p class="stat-value">{{ top_category if top_category else 'N/A' }}</p>
+            </div>
+        </section>
+
+        <!-- Dashboard Content Grid -->
+        <div class="profile-content-grid">
+            <!-- Left: Recent Transactions -->
+            <div class="content-card">
+                <h2 class="content-card-title">Recent Transactions</h2>
+                {% if recent_transactions %}
+                    <div style="overflow-x: auto;">
+                        <table class="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>DATE</th>
+                                    <th>DESCRIPTION</th>
+                                    <th>CATEGORY</th>
+                                    <th>AMOUNT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tx in recent_transactions %}
+                                    <tr>
+                                        <td>{{ tx.date }}</td>
+                                        <td>{{ tx.description if tx.description else 'No description' }}</td>
+                                        <td>
+                                            {% set badge_class = tx.category|lower %}
+                                            {% if badge_class not in ['food', 'transport', 'bills', 'health', 'entertainment', 'shopping'] %}
+                                                {% set badge_class = 'other' %}
+                                            {% endif %}
+                                            <span class="badge badge-{{ badge_class }}">{{ tx.category }}</span>
+                                        </td>
+                                        <td class="amount-cell">₹{{ "{:,.2f}".format(tx.amount) }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div style="text-align: center; padding: 2rem; color: var(--ink-muted);">
+                        <i data-lucide="receipt" style="width: 36px; height: 36px; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                        <p>No transactions found. Start by tracking an expense!</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Right: By Category -->
+            <div class="content-card">
+                <h2 class="content-card-title">By Category</h2>
+                {% if category_breakdown %}
+                    <div class="category-breakdown-list">
+                        {% for cat in category_breakdown %}
+                            <div class="category-breakdown-item">
+                                <div class="category-info">
+                                    <span class="category-name">{{ cat.category }}</span>
+                                    <span class="category-amount">₹{{ "{:,.2f}".format(cat.amount_sum) }}</span>
+                                </div>
+                                <div class="category-progress-bar">
+                                    {% set cat_class = cat.category|lower %}
+                                    {% if cat_class not in ['food', 'transport', 'bills', 'health', 'entertainment', 'shopping'] %}
+                                        {% set cat_class = 'other' %}
+                                    {% endif %}
+                                    <div class="progress-fill bar-{{ cat_class }}" style="width: {{ cat.percentage }}%;"></div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div style="text-align: center; padding: 2rem; color: var(--ink-muted);">
+                        <i data-lucide="pie-chart" style="width: 36px; height: 36px; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                        <p>No category breakdown available.</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
+    </div>
 
-        <!-- Right: By Category -->
-        <div class="content-card">
-            <h2 class="content-card-title">By Category</h2>
-            <div class="category-breakdown-list">
-                <div class="category-breakdown-item">
-                    <div class="category-info">
-                        <span class="category-name">Shopping</span>
-                        <span class="category-amount">₹3,200.00</span>
+    <!-- Tab 2: Settings -->
+    <div id="settings-tab" class="tab-content {{ 'hidden' if active_tab != 'settings' else '' }}">
+        <div class="profile-content-grid">
+            <!-- Left: Update Profile Info -->
+            <div class="content-card">
+                <h2 class="content-card-title">Update Profile Details</h2>
+                <form action="{{ url_for('profile') }}" method="POST" class="settings-form">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" name="name" class="form-input" value="{{ g.user.name if g.user else '' }}" placeholder="Enter your full name" required>
                     </div>
-                    <div class="category-progress-bar">
-                        <div class="progress-fill bar-shopping" style="width: 25.7%;"></div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" class="form-input" value="{{ g.user.email if g.user else '' }}" placeholder="Enter your email" required>
                     </div>
-                </div>
-                <div class="category-breakdown-item">
-                    <div class="category-info">
-                        <span class="category-name">Other</span>
-                        <span class="category-amount">₹2,801.75</span>
+                    <button type="submit" class="btn-submit" style="width: auto; padding: 0.7rem 2rem;">Save Changes</button>
+                </form>
+            </div>
+
+            <!-- Right: Change Password -->
+            <div class="content-card">
+                <h2 class="content-card-title">Change Password</h2>
+                <form action="{{ url_for('profile_password') }}" method="POST" class="settings-form">
+                    <div class="form-group">
+                        <label for="current_password">Current Password</label>
+                        <input type="password" id="current_password" name="current_password" class="form-input" placeholder="••••••••" required>
                     </div>
-                    <div class="category-progress-bar">
-                        <div class="progress-fill bar-other" style="width: 22.5%;"></div>
+                    <div class="form-group">
+                        <label for="new_password">New Password</label>
+                        <input type="password" id="new_password" name="new_password" class="form-input" placeholder="••••••••" required>
                     </div>
-                </div>
-                <div class="category-breakdown-item">
-                    <div class="category-info">
-                        <span class="category-name">Food</span>
-                        <span class="category-amount">₹2,300.00</span>
+                    <div class="form-group">
+                        <label for="confirm_password">Confirm New Password</label>
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-input" placeholder="••••••••" required>
                     </div>
-                    <div class="category-progress-bar">
-                        <div class="progress-fill bar-food" style="width: 18.5%;"></div>
-                    </div>
-                </div>
-                <div class="category-breakdown-item">
-                    <div class="category-info">
-                        <span class="category-name">Bills</span>
-                        <span class="category-amount">₹2,200.00</span>
-                    </div>
-                    <div class="category-progress-bar">
-                        <div class="progress-fill bar-bills" style="width: 17.7%;"></div>
-                    </div>
-                </div>
-                <div class="category-breakdown-item">
-                    <div class="category-info">
-                        <span class="category-name">Health</span>
-                        <span class="category-amount">₹800.00</span>
-                    </div>
-                    <div class="category-progress-bar">
-                        <div class="progress-fill bar-health" style="width: 6.4%;"></div>
-                    </div>
-                </div>
-                <div class="category-breakdown-item">
-                    <div class="category-info">
-                        <span class="category-name">Entertainment</span>
-                        <span class="category-amount">₹649.00</span>
-                    </div>
-                    <div class="category-progress-bar">
-                        <div class="progress-fill bar-entertainment" style="width: 5.2%;"></div>
-                    </div>
-                </div>
+                    <button type="submit" class="btn-submit" style="width: auto; padding: 0.7rem 2rem; background: var(--danger);">Update Password</button>
+                </form>
             </div>
         </div>
     </div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const tabBtns = document.querySelectorAll(".tab-btn");
+    tabBtns.forEach(btn => {
+        btn.addEventListener("click", function() {
+            const tabName = this.getAttribute("data-tab");
+            
+            // Hide all tab content
+            document.querySelectorAll(".tab-content").forEach(content => {
+                content.classList.add("hidden");
+            });
+            
+            // Deactivate all buttons
+            tabBtns.forEach(b => b.classList.remove("active"));
+            
+            // Show current tab and set active
+            document.getElementById(tabName + "-tab").classList.remove("hidden");
+            this.classList.add("active");
+        });
+    });
+});
+</script>
 {% endblock %}

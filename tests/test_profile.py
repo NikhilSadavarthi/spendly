@@ -27,9 +27,9 @@ def test_profile_page_loads_with_stats(client, db):
         assert response.status_code == 200
         assert b"Nitish Kumar" in response.data
         assert b"nitish@example.com" in response.data
-        # Stats checks: count of 8, total of 12,450.75
-        assert b"8" in response.data
-        assert b"12,450.75" in response.data
+        # Stats checks: count of 4, total of 1,680.00
+        assert b"4" in response.data
+        assert b"1,680.00" in response.data
 
 
 def test_profile_update_info_success(client, db):
