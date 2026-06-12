@@ -10,7 +10,7 @@ def test_login_page_loads(client):
 
 
 def test_login_successful(client, db):
-    """POST /login with valid credentials should set session and redirect to landing."""
+    """POST /login with valid credentials should set session and redirect to profile."""
     # "nitish@example.com" is seeded by conftest/seed_db with password "password123"
     data = {
         "email": "nitish@example.com",
@@ -19,7 +19,7 @@ def test_login_successful(client, db):
     with client:
         response = client.post("/login", data=data)
         assert response.status_code == 302
-        assert response.headers["Location"] == "/"
+        assert response.headers["Location"] == "/profile"
         assert session.get("user_id") is not None
         assert session.get("user_name") == "Nitish Kumar"
 

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — Spendly{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+
+    <!-- Flash Messages & Errors -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="auth-{{ category }}" style="margin-bottom: 1.5rem;">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    {% if error %}
+        <div class="auth-error" style="margin-bottom: 1.5rem;">{{ error }}</div>
+    {% endif %}
+
+    <!-- Profile Header -->
+    <header class="profile-header">
+        <div class="avatar-container">
+            <div class="avatar-circle">
+                {% if g.user and g.user.name %}
+                    {% set names = g.user.name.split(' ') %}
+                    {{ names[0][0]|upper }}{{ names[1][0]|upper if names|length > 1 else '' }}
+                {% else %}
+                    DU
+                {% endif %}
+            </div>
+        </div>
+        <div class="profile-user-info">
+            <h1>{{ g.user.name if g.user else 'Demo User' }}</h1>
+            <p class="profile-email">{{ g.user.email if g.user else 'demo@spendly.com' }}</p>
+            <p class="profile-joined">Member since 15 Jan 2025</p>
+        </div>
+    </header>
+
+    <!-- Stats Section -->
+    <section class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-label">TOTAL SPENT</span>
+            <p class="stat-value">₹12,450.75</p>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">TRANSACTIONS</span>
+            <p class="stat-value">8</p>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">TOP CATEGORY</span>
+            <p class="stat-value">Food</p>
+        </div>
+    </section>
+
+    <!-- Dashboard Content Grid -->
+    <div class="profile-content-grid">
+        <!-- Left: Recent Transactions -->
+        <div class="content-card">
+            <h2 class="content-card-title">Recent Transactions</h2>
+            <div style="overflow-x: auto;">
+                <table class="transactions-table">
+                    <thead>
+                        <tr>
+                            <th>DATE</th>
+                            <th>DESCRIPTION</th>
+                            <th>CATEGORY</th>
+                            <th>AMOUNT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>12 Apr 2025</td>
+                            <td>Groceries</td>
+                            <td><span class="badge badge-food">Food</span></td>
+                            <td class="amount-cell">₹850.00</td>
+                        </tr>
+                        <tr>
+                            <td>11 Apr 2025</td>
+                            <td>Metro card recharge</td>
+                            <td><span class="badge badge-transport">Transport</span></td>
+                            <td class="amount-cell">₹500.00</td>
+                        </tr>
+                        <tr>
+                            <td>10 Apr 2025</td>
+                            <td>Electricity bill</td>
+                            <td><span class="badge badge-bills">Bills</span></td>
+                            <td class="amount-cell">₹2,200.00</td>
+                        </tr>
+                        <tr>
+                            <td>09 Apr 2025</td>
+                            <td>Doctor visit</td>
+                            <td><span class="badge badge-health">Health</span></td>
+                            <td class="amount-cell">₹800.00</td>
+                        </tr>
+                        <tr>
+                            <td>08 Apr 2025</td>
+                            <td>Netflix subscription</td>
+                            <td><span class="badge badge-entertainment">Entertainment</span></td>
+                            <td class="amount-cell">₹649.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Right: By Category -->
+        <div class="content-card">
+            <h2 class="content-card-title">By Category</h2>
+            <div class="category-breakdown-list">
+                <div class="category-breakdown-item">
+                    <div class="category-info">
+                        <span class="category-name">Shopping</span>
+                        <span class="category-amount">₹3,200.00</span>
+                    </div>
+                    <div class="category-progress-bar">
+                        <div class="progress-fill bar-shopping" style="width: 25.7%;"></div>
+                    </div>
+                </div>
+                <div class="category-breakdown-item">
+                    <div class="category-info">
+                        <span class="category-name">Other</span>
+                        <span class="category-amount">₹2,801.75</span>
+                    </div>
+                    <div class="category-progress-bar">
+                        <div class="progress-fill bar-other" style="width: 22.5%;"></div>
+                    </div>
+                </div>
+                <div class="category-breakdown-item">
+                    <div class="category-info">
+                        <span class="category-name">Food</span>
+                        <span class="category-amount">₹2,300.00</span>
+                    </div>
+                    <div class="category-progress-bar">
+                        <div class="progress-fill bar-food" style="width: 18.5%;"></div>
+                    </div>
+                </div>
+                <div class="category-breakdown-item">
+                    <div class="category-info">
+                        <span class="category-name">Bills</span>
+                        <span class="category-amount">₹2,200.00</span>
+                    </div>
+                    <div class="category-progress-bar">
+                        <div class="progress-fill bar-bills" style="width: 17.7%;"></div>
+                    </div>
+                </div>
+                <div class="category-breakdown-item">
+                    <div class="category-info">
+                        <span class="category-name">Health</span>
+                        <span class="category-amount">₹800.00</span>
+                    </div>
+                    <div class="category-progress-bar">
+                        <div class="progress-fill bar-health" style="width: 6.4%;"></div>
+                    </div>
+                </div>
+                <div class="category-breakdown-item">
+                    <div class="category-info">
+                        <span class="category-name">Entertainment</span>
+                        <span class="category-amount">₹649.00</span>
+                    </div>
+                    <div class="category-progress-bar">
+                        <div class="progress-fill bar-entertainment" style="width: 5.2%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

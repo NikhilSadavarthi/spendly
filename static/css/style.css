@@ -770,3 +770,269 @@ a { color: inherit; text-decoration: none; }
         padding: 0.5rem;
     }
 }
+
+/* ------------------------------------------------------------------ */
+/* Profile Page                                                       */
+/* ------------------------------------------------------------------ */
+
+.profile-container {
+    max-width: 1050px;
+    margin: 3rem auto;
+    padding: 0 1.5rem;
+}
+
+.profile-header {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 2.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.avatar-container {
+    flex-shrink: 0;
+}
+
+.avatar-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #0d3a22;
+    color: var(--paper-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-body);
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+.profile-user-info h1 {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    color: var(--ink);
+    margin-bottom: 0.15rem;
+    font-weight: 500;
+}
+
+.profile-email {
+    color: var(--ink-muted);
+    font-size: 0.88rem;
+    margin-bottom: 0.2rem;
+}
+
+.profile-joined {
+    color: var(--ink-faint);
+    font-size: 0.8rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.stat-label {
+    font-size: 0.72rem;
+    color: var(--ink-muted);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+
+.stat-value {
+    font-family: var(--font-display);
+    font-size: 1.85rem;
+    color: var(--ink);
+    font-weight: 500;
+    margin: 0;
+}
+
+.profile-content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.content-card {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.75rem 2rem;
+}
+
+.content-card-title {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    color: var(--ink);
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+}
+
+/* Transactions Table */
+.transactions-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.transactions-table th {
+    font-size: 0.72rem;
+    color: var(--ink-muted);
+    font-weight: 600;
+    text-align: left;
+    padding: 0.6rem 0.5rem;
+    border-bottom: 1px solid var(--border-soft);
+    letter-spacing: 0.05em;
+}
+
+.transactions-table td {
+    padding: 0.95rem 0.5rem;
+    font-size: 0.875rem;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.transactions-table tr:last-child td {
+    border-bottom: none;
+}
+
+.amount-cell {
+    text-align: right;
+    font-weight: 500;
+    color: var(--ink) !important;
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.badge-food {
+    background: #eaf6f0;
+    color: #1a472a;
+}
+
+.badge-transport {
+    background: #fdf3e3;
+    color: #c17f24;
+}
+
+.badge-bills {
+    background: #edf2f9;
+    color: #3b5998;
+}
+
+.badge-health {
+    background: #fdecea;
+    color: #c0392b;
+}
+
+.badge-entertainment {
+    background: #f3e8ff;
+    color: #7c3aed;
+}
+
+/* Category Breakdown List */
+.category-breakdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.category-breakdown-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.category-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.category-name {
+    color: var(--ink-soft);
+    font-weight: 500;
+}
+
+.category-amount {
+    color: var(--ink-soft);
+    font-weight: 600;
+}
+
+.category-progress-bar {
+    height: 6px;
+    background: #f1f0ec;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 999px;
+}
+
+.bar-shopping {
+    background: #c17f24;
+}
+
+.bar-other {
+    background: #8c7c70;
+}
+
+.bar-food {
+    background: #0d3a22;
+}
+
+.bar-bills {
+    background: #3498db;
+}
+
+.bar-health {
+    background: #c0392b;
+}
+
+.bar-entertainment {
+    background: #9b59b6;
+}
+
+/* Responsive Scaling */
+@media (max-width: 900px) {
+    .profile-content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 650px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 2rem 1.5rem;
+    }
+}
+
+
