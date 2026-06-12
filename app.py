@@ -1,7 +1,7 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session, g
 import os
 from database.db import close_db, init_db, seed_db, DATABASE, get_db
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-12345")
@@ -16,6 +16,15 @@ with app.app_context():
     if not os.path.exists(DATABASE):
         init_db()
         seed_db()
+
+@app.before_request
+def load_logged_in_user():
+    user_id = session.get("user_id")
+    if user_id is None:
+        g.user = None
+    else:
+        g.user = get_db().execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+
 
 
 # ------------------------------------------------------------------ #
@@ -70,8 +79,33 @@ def register():
     return render_template("register.html")
 
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
+    if g.user is not None:
+        return redirect(url_for("landing"))
+
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "")
+
+        if not email or not password:
+            return render_template("login.html", error="All fields are required."), 400
+
+        if "@" not in email or "." not in email.split("@")[-1]:
+            return render_template("login.html", error="Invalid email address format."), 400
+
+        db = get_db()
+        user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+
+        if user is None or not check_password_hash(user["password"], password):
+            return render_template("login.html", error="Invalid email or password."), 400
+
+        session["user_id"] = user["id"]
+        session["user_name"] = user["name"]
+
+        flash(f"Welcome back, {user['name']}!", "success")
+        return redirect(url_for("landing"))
+
     return render_template("login.html")
 
 
@@ -91,7 +125,9 @@ def privacy():
 
 @app.route("/logout")
 def logout():
-    return "Logout — coming in Step 3"
+    session.clear()
+    flash("You have been logged out.", "success")
+    return redirect(url_for("landing"))
 
 
 @app.route("/profile")
