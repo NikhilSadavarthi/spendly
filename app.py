@@ -404,9 +404,84 @@ def profile_password():
     return redirect(url_for("login"))
 
 
-@app.route("/expenses/add")
+@app.route("/expenses/add", methods=["GET", "POST"])
 def add_expense():
-    return "Add expense — coming in Step 7"
+    if g.user is None:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        category = request.form.get("category", "").strip()
+        amount_str = request.form.get("amount", "").strip()
+        date_str = request.form.get("date", "").strip()
+        description = request.form.get("description", "").strip()
+
+        # Validation: check if required fields are present
+        if not category or not amount_str or not date_str:
+            return render_template(
+                "add_expense.html",
+                error="Category, amount, and date are required.",
+                today_date=datetime.date.today().strftime("%Y-%m-%d")
+            ), 400
+
+        # Validate category
+        valid_categories = ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"]
+        if category not in valid_categories:
+            return render_template(
+                "add_expense.html",
+                error="Invalid category selected.",
+                today_date=datetime.date.today().strftime("%Y-%m-%d")
+            ), 400
+
+        # Validate amount
+        try:
+            amount = float(amount_str)
+            if amount <= 0:
+                raise ValueError("Amount must be positive.")
+        except ValueError:
+            return render_template(
+                "add_expense.html",
+                error="Amount must be a positive number.",
+                today_date=datetime.date.today().strftime("%Y-%m-%d")
+            ), 400
+
+        # Validate date
+        try:
+            datetime.date.fromisoformat(date_str)
+        except ValueError:
+            return render_template(
+                "add_expense.html",
+                error="Invalid date format. Use YYYY-MM-DD.",
+                today_date=datetime.date.today().strftime("%Y-%m-%d")
+            ), 400
+
+        # Sanitize description
+        if len(description) > 200:
+            return render_template(
+                "add_expense.html",
+                error="Description must be 200 characters or less.",
+                today_date=datetime.date.today().strftime("%Y-%m-%d")
+            ), 400
+
+        db = get_db()
+        try:
+            db.execute(
+                "INSERT INTO expenses (user_id, category, amount, date, description) VALUES (?, ?, ?, ?, ?)",
+                (g.user["id"], category, amount, date_str, description if description else None)
+            )
+            db.commit()
+            flash("Expense added successfully!", "success")
+            return redirect(url_for("profile"))
+        except Exception as e:
+            db.rollback()
+            return render_template(
+                "add_expense.html",
+                error="An error occurred while saving the expense. Please try again.",
+                today_date=datetime.date.today().strftime("%Y-%m-%d")
+            ), 500
+
+    today_date = datetime.date.today().strftime("%Y-%m-%d")
+    return render_template("add_expense.html", today_date=today_date)
 
 
 @app.route("/expenses/<int:id>/edit")
