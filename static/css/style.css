@@ -1035,4 +1035,60 @@ a { color: inherit; text-decoration: none; }
     }
 }
 
+/* ------------------------------------------------------------------ */
+/* Profile Tabs & Form Styles                                         */
+/* ------------------------------------------------------------------ */
+
+.profile-tabs {
+    display: flex;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2rem;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 0.75rem 1rem;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--ink-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.tab-btn:hover {
+    color: var(--ink);
+}
+
+.tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+.hidden {
+    display: none !important;
+}
+
+.badge-shopping {
+    background: var(--accent-2-light);
+    color: var(--accent-2);
+}
+
+.badge-other {
+    background: #f1f0ec;
+    color: #5c554f;
+}
+
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+
 
