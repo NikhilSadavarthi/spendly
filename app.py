@@ -484,9 +484,96 @@ def add_expense():
     return render_template("add_expense.html", today_date=today_date)
 
 
-@app.route("/expenses/<int:id>/edit")
+@app.route("/expenses/<int:id>/edit", methods=["GET", "POST"])
 def edit_expense(id):
-    return "Edit expense — coming in Step 8"
+    if g.user is None:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    db = get_db()
+    expense = db.execute("SELECT * FROM expenses WHERE id = ? AND user_id = ?", (id, g.user["id"])).fetchone()
+    if expense is None:
+        flash("Expense not found.", "error")
+        return redirect(url_for("profile"))
+
+    if request.method == "POST":
+        category = request.form.get("category", "").strip()
+        amount_str = request.form.get("amount", "").strip()
+        date_str = request.form.get("date", "").strip()
+        description = request.form.get("description", "").strip()
+
+        submitted_expense = {
+            "id": id,
+            "category": category,
+            "amount": amount_str,
+            "date": date_str,
+            "description": description
+        }
+
+        # Validation: check if required fields are present
+        if not category or not amount_str or not date_str:
+            return render_template(
+                "edit_expense.html",
+                expense=submitted_expense,
+                error="Category, amount, and date are required."
+            ), 400
+
+        # Validate category
+        valid_categories = ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"]
+        if category not in valid_categories:
+            return render_template(
+                "edit_expense.html",
+                expense=submitted_expense,
+                error="Invalid category selected."
+            ), 400
+
+        # Validate amount
+        try:
+            amount = float(amount_str)
+            if amount <= 0:
+                raise ValueError("Amount must be positive.")
+        except ValueError:
+            return render_template(
+                "edit_expense.html",
+                expense=submitted_expense,
+                error="Amount must be a positive number."
+            ), 400
+
+        # Validate date
+        try:
+            datetime.date.fromisoformat(date_str)
+        except ValueError:
+            return render_template(
+                "edit_expense.html",
+                expense=submitted_expense,
+                error="Invalid date format. Use YYYY-MM-DD."
+            ), 400
+
+        # Sanitize description
+        if len(description) > 200:
+            return render_template(
+                "edit_expense.html",
+                expense=submitted_expense,
+                error="Description must be 200 characters or less."
+            ), 400
+
+        try:
+            db.execute(
+                "UPDATE expenses SET category = ?, amount = ?, date = ?, description = ? WHERE id = ? AND user_id = ?",
+                (category, amount, date_str, description if description else None, id, g.user["id"])
+            )
+            db.commit()
+            flash("Expense updated successfully!", "success")
+            return redirect(url_for("profile"))
+        except Exception as e:
+            db.rollback()
+            return render_template(
+                "edit_expense.html",
+                expense=submitted_expense,
+                error="An error occurred while updating the expense. Please try again."
+            ), 500
+
+    return render_template("edit_expense.html", expense=expense)
 
 
 @app.route("/expenses/<int:id>/delete")

@@ -137,6 +137,7 @@
                                     <th>DESCRIPTION</th>
                                     <th>CATEGORY</th>
                                     <th>AMOUNT</th>
+                                    <th style="text-align: right; width: 80px;">ACTIONS</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -152,6 +153,11 @@
                                             <span class="badge badge-{{ badge_class }}">{{ tx.category }}</span>
                                         </td>
                                         <td class="amount-cell">₹{{ "{:,.2f}".format(tx.amount) }}</td>
+                                        <td style="text-align: right; white-space: nowrap;">
+                                            <a href="{{ url_for('edit_expense', id=tx.id) }}" style="color: var(--ink-muted); text-decoration: none; padding: 0.25rem; display: inline-flex; align-items: center; justify-content: center; transition: color 0.2s;" title="Edit Expense" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--ink-muted)'">
+                                                <i data-lucide="pencil" style="width: 14px; height: 14px;"></i>
+                                            </a>
+                                        </td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
