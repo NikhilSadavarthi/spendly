@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Add Expense — Spendly{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="auth-container">
+        
+        <div class="auth-header">
+            <h1 class="auth-title">Add Expense</h1>
+            <p class="auth-subtitle">Log a new expense to track your spending</p>
+        </div>
+
+        <div class="auth-card">
+            {% if error %}
+                <div class="auth-error" style="margin-bottom: 1.5rem;">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('add_expense') }}">
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" name="category" class="form-input" style="height: auto; padding: 0.75rem;" required>
+                        <option value="" disabled selected>Select a category</option>
+                        <option value="Food">Food</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Bills">Bills</option>
+                        <option value="Health">Health</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="amount">Amount (₹)</label>
+                    <input type="number" id="amount" name="amount" class="form-input" placeholder="0.00" step="0.01" min="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" name="date" class="form-input" value="{{ today_date }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <input type="text" id="description" name="description" class="form-input" placeholder="e.g. Lunch at restaurant" maxlength="200">
+                </div>
+                
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="submit" class="btn-submit" style="flex: 1;">Add Expense</button>
+                    <a href="{{ url_for('profile') }}" class="btn-submit" style="flex: 1; text-align: center; text-decoration: none; background: var(--bg-card); color: var(--ink); border: 1px solid var(--border); display: inline-flex; align-items: center; justify-content: center; height: 100%;">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</section>
+{% endblock %}

@@ -122,7 +122,12 @@
         <div class="profile-content-grid">
             <!-- Left: Recent Transactions -->
             <div class="content-card">
-                <h2 class="content-card-title">Recent Transactions</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2 class="content-card-title" style="margin-bottom: 0;">Recent Transactions</h2>
+                    <a href="{{ url_for('add_expense') }}" class="btn-filter-apply" style="text-decoration: none;">
+                        <i data-lucide="plus" style="width: 14px; height: 14px; margin-right: 4px; vertical-align: text-bottom;"></i> Add Expense
+                    </a>
+                </div>
                 {% if recent_transactions %}
                     <div style="overflow-x: auto;">
                         <table class="transactions-table">
