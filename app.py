@@ -576,9 +576,27 @@ def edit_expense(id):
     return render_template("edit_expense.html", expense=expense)
 
 
-@app.route("/expenses/<int:id>/delete")
+@app.route("/expenses/<int:id>/delete", methods=["POST"])
 def delete_expense(id):
-    return "Delete expense — coming in Step 9"
+    if g.user is None:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    db = get_db()
+    expense = db.execute("SELECT * FROM expenses WHERE id = ? AND user_id = ?", (id, g.user["id"])).fetchone()
+    if expense is None:
+        flash("Expense not found.", "error")
+        return redirect(url_for("profile"))
+
+    try:
+        db.execute("DELETE FROM expenses WHERE id = ? AND user_id = ?", (id, g.user["id"]))
+        db.commit()
+        flash("Expense deleted successfully!", "success")
+    except Exception as e:
+        db.rollback()
+        flash("An error occurred while deleting the expense. Please try again.", "error")
+
+    return redirect(url_for("profile"))
 
 
 if __name__ == "__main__":

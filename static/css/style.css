@@ -1200,5 +1200,22 @@ a { color: inherit; text-decoration: none; }
     }
 }
 
+/* Table Action Buttons */
+.action-btn-delete {
+    background: none;
+    border: none;
+    color: var(--ink-muted);
+    padding: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.action-btn-delete:hover {
+    color: var(--danger);
+}
+
 
 
